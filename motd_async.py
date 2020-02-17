@@ -36,7 +36,7 @@ async def connect_rabbitmq(loop):
     pika_connection = await aio_pika.connect_robust("amqp://{}:{}@{}:{}/{}".format(os.environ['RABBIT_USER'], os.environ['RABBIT_PW'], os.environ['RABBIT_HOST'], os.environ['RABBIT_PORT'], os.environ['RABBIT_VHOST']), loop=loop)
     pika_channel = await pika_connection.channel()
     await pika_channel.set_qos(prefetch_count=workers_amount)
-    pika_queue = await pika_channel.declare_queue(os.environ['RABBIT_PORTS_QUEUE'], durable=True)
+    pika_queue = await pika_channel.declare_queue(os.environ['RABBIT_PORTSCAN_QUEUE'], durable=True)
     await pika_queue.consume(consumer_func)
     return pika_connection, pika_channel, pika_queue
 
