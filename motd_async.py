@@ -14,13 +14,14 @@ pika_connection = None
 pika_channel = None
 pika_queue = None
 
-workers_amount = 400
+workers_amount = 100
 
 def check(ip, port):
     try:
         status = MinecraftServer.lookup("{}:{}".format(ip, port)).status(retries=1)
         return bool(status)
-    except (socket.timeout, ConnectionRefusedError, ConnectionResetError, OSError):
+    except (socket.timeout, ConnectionRefusedError, ConnectionResetError, OSError) as e:
+        print(e)
         return False
 
 async def consumer_func(message: aio_pika.IncomingMessage):
