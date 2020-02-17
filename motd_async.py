@@ -14,7 +14,7 @@ pika_connection = None
 pika_channel = None
 pika_queue = None
 
-workers_amount = 
+workers_amount = 400
 
 def check(ip, port):
     try:
@@ -28,14 +28,14 @@ async def consumer_func(message: aio_pika.IncomingMessage):
     task = loop.run_in_executor(executor, check, json_body['ip'], json_body['port'])
     res, _ = await asyncio.wait([task])
     if list(res)[0].result():
-        await pika_channel.default_exchange.publish(message, routing_key=os.environ['RABBIT_MOTD_QUEUE']) # motd_test_done
+        await pika_channel.default_exchange.publish(message, routing_key=os.environ['RABBIT_MOTD_QUEUE'])
     message.ack()
 
 async def connect_rabbitmq(loop):
     global pika_channel, pika_connection, pika_queue
     pika_connection = await aio_pika.connect_robust("amqp://{}:{}@{}:{}/{}".format(os.environ['RABBIT_USER'], os.environ['RABBIT_PW'], os.environ['RABBIT_HOST'], os.environ['RABBIT_PORT'], os.environ['RABBIT_VHOST']), loop=loop)
     pika_channel = await pika_connection.channel()
-    await pika_channel.set_qos(prefetch_count=500)
+    await pika_channel.set_qos(prefetch_count=workers_amount)
     pika_queue = await pika_channel.declare_queue(os.environ['RABBIT_PORTS_QUEUE'], durable=True)
     await pika_queue.consume(consumer_func)
     return pika_connection, pika_channel, pika_queue
@@ -45,7 +45,7 @@ async def main(loop):
 
 if __name__ == "__main__":
     executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=300,
+            max_workers=workers_amount,
         )
 
     loop = asyncio.get_event_loop()
