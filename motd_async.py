@@ -29,6 +29,7 @@ async def consumer_func(message: aio_pika.IncomingMessage):
     task = loop.run_in_executor(executor, check, json_body['ip'], json_body['port'])
     res, _ = await asyncio.wait([task])
     if list(res)[0].result():
+        message.delivery_mode = 2
         await pika_channel.default_exchange.publish(message, routing_key=os.environ['RABBIT_MOTD_QUEUE'])
     message.ack()
 
